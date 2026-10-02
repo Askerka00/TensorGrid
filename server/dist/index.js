@@ -20,12 +20,23 @@ nodes.set('NODE-AZURE-PC01', {
     ip: '20.203.106.30',
     gpu: 'Standard B2ats (Emulated GPU)',
     vram: 'NVIDIA RTX 4080 (Mocked)',
-    status: 'IDLE',
+    status: 'COMPUTING',
     wallet: '7xKX...Tg9P (Solana Devnet)',
-    totalEarnedUsdc: 0.0,
-    totalComputeSec: 0,
+    totalEarnedUsdc: 0.0028,
+    totalComputeSec: 20,
     lastHeartbeat: Date.now(),
+    currentTask: 'PyTorch: Llama-3.3-70B Batch Inference',
 });
+// Фоновый таймер стриминга начислений в $USDC
+const RATE_PER_SEC = 0.50 / 3600.0;
+setInterval(() => {
+    for (const node of nodes.values()) {
+        if (node.status === 'COMPUTING') {
+            node.totalComputeSec += 1;
+            node.totalEarnedUsdc += RATE_PER_SEC;
+        }
+    }
+}, 1000);
 // HTML Дашборд для наглядного мониторинга сети в браузере
 app.get('/', (req, res) => {
     const nodeList = Array.from(nodes.values());
@@ -38,7 +49,7 @@ app.get('/', (req, res) => {
 <head>
   <meta charset="UTF-8">
   <title>⚡ TensorGrid Orchestrator Dashboard</title>
-  <meta http-equiv="refresh" content="3">
+  <meta http-equiv="refresh" content="2">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; margin: 0; padding: 24px; }
     h1 { color: #58a6ff; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -50,6 +61,12 @@ app.get('/', (req, res) => {
     .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
     .badge-idle { background: #1f6feb33; color: #58a6ff; border: 1px solid #1f6feb; }
     .badge-comp { background: #23863633; color: #3fb950; border: 1px solid #238636; }
+    .controls { margin-bottom: 24px; display: flex; gap: 12px; }
+    .btn { padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; font-size: 14px; text-decoration: none; display: inline-block; }
+    .btn-green { background: #238636; color: #fff; }
+    .btn-green:hover { background: #2ea043; }
+    .btn-red { background: #da3633; color: #fff; }
+    .btn-red:hover { background: #f85149; }
     table { width: 100%; border-collapse: collapse; background: #161b22; border-radius: 8px; overflow: hidden; border: 1px solid #30363d; }
     th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #21262d; font-size: 14px; }
     th { background: #0d1117; color: #8b949e; font-weight: 600; }
@@ -76,8 +93,17 @@ app.get('/', (req, res) => {
     </div>
     <div class="card">
       <div class="card-title">Выплачено в $USDC</div>
-      <div class="card-val" style="color: #f1e05a;">$${totalUsdc.toFixed(4)}</div>
+      <div class="card-val" style="color: #f1e05a;">$${totalUsdc.toFixed(5)}</div>
     </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-green" onclick="fetch('/api/tasks/submit', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'AI Inference', model:'Llama-3.3-70B'})}).then(()=>location.reload())">
+      ⚡ Запустить AI-задачу ($USDC Streaming)
+    </button>
+    <button class="btn btn-red" onclick="fetch('/api/tasks/stop', {method:'POST'}).then(()=>location.reload())">
+      🛑 Сбросить задачу (Kill-Switch / IDLE)
+    </button>
   </div>
 
   <h2>Подключенные вычислительные узлы (Nodes)</h2>
@@ -116,12 +142,11 @@ app.get('/', (req, res) => {
   `;
     res.send(html);
 });
-// REST API для агентов: Heartbeat & статус
+// REST API: Heartbeat
 app.post('/api/nodes/heartbeat', (req, res) => {
     const { id, ip, status, totalEarnedUsdc, totalComputeSec, currentTask } = req.body;
-    if (!id) {
+    if (!id)
         return res.status(400).json({ error: 'Missing node ID' });
-    }
     const existing = nodes.get(id) || {
         id,
         ip: ip || req.ip || 'unknown',
@@ -145,22 +170,23 @@ app.post('/api/nodes/heartbeat', (req, res) => {
     nodes.set(id, existing);
     res.json({ success: true, node: existing });
 });
-// REST API для отправки задач заказчиками
+// REST API: Submit Task
 app.post('/api/tasks/submit', (req, res) => {
-    const { type, model, prompt, budgetUsdc } = req.body;
-    // Ищем первую свободную ноду
-    const availableNode = Array.from(nodes.values()).find(n => n.status === 'IDLE');
-    if (!availableNode) {
-        return res.status(503).json({ error: 'No idle compute nodes available right now' });
+    const { type, model } = req.body;
+    const node = nodes.get('NODE-AZURE-PC01') || Array.from(nodes.values())[0];
+    if (node) {
+        node.status = 'COMPUTING';
+        node.currentTask = `${type || 'Inference'}: ${model || 'Llama-3.3-70B'}`;
     }
-    availableNode.status = 'COMPUTING';
-    availableNode.currentTask = `${type || 'Inference'}: ${model || 'Ollama LLM'}`;
-    res.json({
-        success: true,
-        taskId: 'TASK-' + Math.random().toString(36).substring(2, 9).toUpperCase(),
-        assignedNode: availableNode.id,
-        ratePerHourUsdc: 0.50,
-    });
+    res.json({ success: true, assignedNode: node?.id });
+});
+// REST API: Stop Task (Kill-Switch)
+app.post('/api/tasks/stop', (req, res) => {
+    for (const node of nodes.values()) {
+        node.status = 'IDLE';
+        node.currentTask = 'Ожидание простоя системы';
+    }
+    res.json({ success: true });
 });
 // WebSockets
 wss.on('connection', (ws) => {
