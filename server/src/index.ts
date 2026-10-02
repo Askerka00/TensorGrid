@@ -33,7 +33,7 @@ nodes.set('NODE-AZURE-PC01', {
   gpu: 'Standard B2ats (Emulated GPU)',
   vram: 'NVIDIA RTX 4080 (Mocked)',
   status: 'COMPUTING',
-  wallet: '7xKX...Tg9P (Solana Devnet)',
+  wallet: '46xHyUg3GnUZhBxvTCrSF1CGu59qQKgTRB6Sw8RyYh9L',
   totalEarnedUsdc: 0.0028,
   totalComputeSec: 20,
   lastHeartbeat: Date.now(),
@@ -109,6 +109,14 @@ app.get('/', (req: Request, res: Response) => {
     <div class="card">
       <div class="card-title">Выплачено в $USDC</div>
       <div class="card-val" style="color: #f1e05a;">$${totalUsdc.toFixed(5)}</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">👛 Привязать кошелек Solana для выплат (Phantom / Solflare)</div>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <input id="walletInput" type="text" placeholder="Введи публичный адрес кошелька Solana (например, из Phantom)..." value="${nodeList[0]?.wallet || ''}" style="flex: 1; padding: 10px 14px; background: #0d1117; border: 1px solid #30363d; color: #58a6ff; font-weight: 600; border-radius: 6px; font-family: monospace; font-size: 14px;" />
+      <button class="btn btn-green" onclick="fetch('/api/nodes/wallet', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:'NODE-AZURE-PC01', wallet: document.getElementById('walletInput').value})}).then(()=>location.reload())">💾 Сохранить кошелек</button>
     </div>
   </div>
 
@@ -195,6 +203,16 @@ app.post('/api/tasks/submit', (req: Request, res: Response) => {
     node.currentTask = `${type || 'Inference'}: ${model || 'Llama-3.3-70B'}`;
   }
   res.json({ success: true, assignedNode: node?.id });
+});
+
+// REST API: Update Wallet
+app.post('/api/nodes/wallet', (req: Request, res: Response) => {
+  const { id, wallet } = req.body;
+  const node = nodes.get(id || 'NODE-AZURE-PC01');
+  if (node && wallet) {
+    node.wallet = wallet;
+  }
+  res.json({ success: true, wallet: node?.wallet });
 });
 
 // REST API: Stop Task (Kill-Switch)

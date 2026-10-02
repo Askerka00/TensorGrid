@@ -6,6 +6,10 @@ Write-Host "              ⚡ TENSORGRID NODE AGENT v0.1               " -Foregr
 Write-Host "         Decentralized GPU Compute on Solana              " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
+param(
+    [string]$Wallet = "46xHyUg3GnUZhBxvTCrSF1CGu59qQKgTRB6Sw8RyYh9L"
+)
+
 # 1. Compile UserInput Hook (Win32 GetLastInputInfo)
 Add-Type @"
 using System;
@@ -34,8 +38,8 @@ $IDLE_THRESHOLD_SEC = 15 # Для демонстрации: 15 секунд пр
 $RATE_PER_HOUR = 0.50 # $0.50/час
 $RATE_PER_SEC = $RATE_PER_HOUR / 3600.0
 
-$nodeId = "NODE-" + (Get-Random -Minimum 1000 -Maximum 9999)
-$solanaWallet = "7xKX...Tg9P (Solana Devnet)"
+$nodeId = "NODE-AZURE-PC01"
+$solanaWallet = $Wallet
 $totalEarned = 0.0
 $totalComputeSeconds = 0
 $state = "IDLE_WAITING" # IDLE_WAITING, COMPUTING
