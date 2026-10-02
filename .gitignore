@@ -1,0 +1,14 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environments & Dependencies
+node_modules/
+target/
+venv/
+.env
+.env.local
+
+# Logs
+*.log
+logs/
