@@ -1,57 +1,114 @@
 # ⚡ TensorGrid
 
-> Децентрализованный DePIN-протокол на блокчейне Solana, объединяющий простаивающие мощности GPU в глобальный суперкомпьютер для инференса нейросетей, обучения ИИ и 3D-рендеринга.
+> Decentralized DePIN compute protocol powered by the Solana blockchain, aggregating idle GPU & CPU computing power into a distributed supercluster for AI inference, deep learning, and 3D rendering.
 
 ---
 
-## 📌 О проекте
+## 📌 Overview
 
-TensorGrid решает проблему простоя оборудования и завышенных цен облачных монополистов. Протокол позволяет владельцам компьютерных клубов, игровых ПК и рабочих станций монетизировать свободные видеокарты (NVIDIA RTX 30xx/40xx/50xx), а разработчикам ИИ получать доступ к мощностям по цене от **$0.50/час** (в 6-10 раз выгоднее AWS и Azure).
+**TensorGrid** solves the dilemma of idle hardware and overpriced cloud monopolies (AWS, Azure, GCP). The protocol allows gaming centers, PC cafes, and individual workstation owners to monetize idle hardware (NVIDIA RTX 30xx/40xx/50xx, Apple Silicon Metal, AMD Radeon, and multi-core CPUs), while AI developers gain access to on-demand compute starting at **$0.50/hour** (up to 80% cheaper than traditional cloud providers).
 
-### Ключевые возможности
+### Key Features
 
-* **Solana Core**: микротранзакции в реальном времени с комиссией $0.00025. Выплаты в $USDC каждые 10 минут.
-* **Smart Zero-Lag**: автоматический старт при простое системы и мгновенный сброс задачи (Kill-Switch) при движении мыши.
-* **Безопасная песочница**: выполнение задач в изолированных Docker/WASM контейнерах без доступа к файлам хоста.
-* **Solana Blinks & Actions**: мониторинг доходности и вывод средств в 1 клик через Telegram и X.
+* **Solana Core Payouts**: Real-time microtransactions with sub-cent fees ($0.00025). Streaming payouts in $USDC and SOL directly to your Solana wallet (Phantom, Solflare).
+* **Smart Zero-Lag Detection**: Automatic background execution on system idle, and an instant **Kill-Switch (<10ms)** that frees GPU/CPU resources immediately upon user keyboard/mouse activity.
+* **Universal Hardware Support**: 
+  - **NVIDIA GPUs** (CUDA / TensorRT)
+  - **Apple Silicon** (M1–M4 via Metal Performance Shaders & MLX)
+  - **AMD Radeon** (DirectML on Windows, ROCm on Linux)
+  - **CPU-Only Fallback** (llama.cpp / AVX2 quantized LLM inference)
+* **Secure Sandbox**: Workloads run in isolated execution environments with zero access to host files or personal data.
+* **Live Web Dashboard & REST API**: Real-time orchestration dashboard with live node metrics, automated wallet binding, and remote task dispatching.
 
 ---
 
-## 🏗 Архитектура системы
+## 🏗 System Architecture
 
 ```
-[Поставщики GPU] ──► [Фоновый Агент] ──► [Solana Escrow] ──► [ИИ-Заказчики]
-       ▲                                         │                  │
-       └──────────────── $USDC микровыплаты ─────┴──────────────────┘
+[Compute Providers] ──► [Node Agent (Zero-Lag)] ──► [Solana Escrow] ──► [AI Developers]
+        ▲                                                    │                   │
+        └──────────────── Real-Time $USDC / SOL Payouts ─────┴───────────────────┘
 ```
 
-| Компонент | Назначение | Стек |
+| Component | Description | Tech Stack |
 | :--- | :--- | :--- |
-| **Node Agent** | Фоновый клиент для детекта простоя и запуска контейнеров | Rust, C++, Docker |
-| **Orchestrator** | Маршрутизация задач и валидация Proof-of-Computation | Go, Redis, PostgreSQL |
-| **Blockchain** | Escrow депозитов заказчиков и стриминг выплат | Solana, Anchor, Rust |
-| **SDK / API** | Интерфейс отправки задач (PyTorch, Ollama, Blender) | Python, REST, OpenAPI |
+| **Web Dashboard** | Real-time orchestrator UI, node manager, and wallet binder | React 18, Vite, Tailwind CSS, Lucide |
+| **Orchestrator** | Node heartbeat management, task scheduling, and live state | Node.js, Express, WebSocket, TypeScript |
+| **Blockchain Engine** | Devnet escrow, wallet balances, and automated payout cycles | Solana Web3.js, SPL Token, @solana/web3.js |
+| **Node Agents** | Hardware auto-detection, idle polling, and instant kill-switch | PowerShell (Windows), Bash (macOS / Linux) |
 
 ---
 
-## 💰 Экономика ($0.50 / час за RTX 4080)
+## 💰 Economics ($0.50 / hour benchmark for RTX 4080)
 
-* **70% ($0.35/час)**: выплата владельцу оборудования.
-* **20% ($0.10/час)**: развитие протокола и поддержка инфраструктуры.
-* **10% ($0.05/час)**: страховой пул и вознаграждение валидаторам.
-
----
-
-## 🗺 Дорожная карта
-
-- [x] Разработка концепции и системной архитектуры
-- [ ] Windows Client (PoC) с поддержкой Docker и мгновенным сбросом
-- [ ] Смарт-контракты Escrow на Solana Devnet
-- [ ] Пилотный запуск распределенного инференса (Ollama / Blender)
-- [ ] Публичный релиз в Solana Mainnet и интеграция Blinks
+* **70% ($0.35/hr)**: Direct payout to the hardware provider.
+* **20% ($0.10/hr)**: Protocol treasury, network routing, and infrastructure scaling.
+* **10% ($0.05/hr)**: Slashing insurance pool and validator consensus rewards.
 
 ---
 
-## 📄 Лицензия
+## 🚀 Quick Start Guide
 
-MIT License
+### 1. Launch the Orchestrator & Dashboard
+
+```bash
+# Clone the repository
+git clone https://github.com/Askerka00/TensorGrid.git
+cd TensorGrid
+
+# Install dependencies
+npm run install:all
+
+# Start orchestrator and dashboard locally
+npm run dev
+```
+
+* **Web Dashboard**: `http://localhost:5173`
+* **Orchestrator API**: `http://localhost:4000`
+
+---
+
+### 2. Connect a Worker Node (1-Click Run)
+
+You can connect any PC or server to the network using the pre-configured 1-click commands:
+
+#### 🪟 Windows (NVIDIA CUDA / AMD / CPU)
+Run PowerShell as Administrator:
+```powershell
+irm https://tensorgrid.vercel.app/agent.ps1 | iex
+```
+*Custom Wallet Example:*
+```powershell
+& ([scriptblock]::Create((irm https://tensorgrid.vercel.app/agent.ps1))) -Wallet "YOUR_SOLANA_WALLET_ADDRESS"
+```
+
+#### 🍏 macOS (Apple Silicon M1/M2/M3/M4 Metal)
+Open Terminal and run:
+```bash
+curl -sSL https://tensorgrid.vercel.app/agent.sh | bash -s -- "YOUR_SOLANA_WALLET_ADDRESS"
+```
+
+#### 🐧 Linux (CUDA / ROCm / CPU)
+```bash
+curl -sSL https://tensorgrid.vercel.app/agent.sh | bash -s -- "YOUR_SOLANA_WALLET_ADDRESS"
+```
+
+---
+
+## 🗺 Roadmap
+
+- [x] Protocol concept and architecture specification
+- [x] Orchestrator REST API with real-time heartbeat tracking
+- [x] Zero-Lag Node Agent for Windows (PowerShell Win32 API Hook)
+- [x] Zero-Lag Node Agent for macOS (Metal MPS) & Linux (CUDA/ROCm)
+- [x] Live React web dashboard with Solana Devnet payouts
+- [x] Production cloud deployment on Vercel
+- [ ] Solana Mainnet smart contract deployment (Anchor)
+- [ ] Containerized Docker / WASM sandbox executor
+- [ ] Solana Blinks & Actions for 1-click mobile earnings tracking
+
+---
+
+## 📄 License
+
+MIT License © 2026 TensorGrid Protocol

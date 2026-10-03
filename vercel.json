@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "installCommand": "npm --prefix web install && npm --prefix server install && npm install",
+  "buildCommand": "npm --prefix web run build && npm --prefix server run build",
+  "outputDirectory": "web/dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/agent.ps1", "destination": "/api" },
+    { "source": "/agent.sh", "destination": "/api" }
+  ]
+}

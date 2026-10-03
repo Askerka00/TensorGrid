@@ -12,3 +12,7 @@ venv/
 # Logs
 *.log
 logs/
+# Build artifacts
+dist/
+server/dist/
+.vercel
