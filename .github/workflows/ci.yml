@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate Repository & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          echo "Checking TensorGrid repository structure..."
+          test -f README.md        && echo "✓ README.md"
+          test -f LICENSE          && echo "✓ LICENSE"
+          test -f CONTRIBUTING.md  && echo "✓ CONTRIBUTING.md"
+          test -f .env.example     && echo "✓ .env.example"
+          test -f Anchor.toml      && echo "✓ Anchor.toml"
+          test -d docs             && echo "✓ docs/"
+          test -d programs         && echo "✓ programs/"
+          test -d tests            && echo "✓ tests/"
+          test -d web              && echo "✓ web/"
+          test -d server           && echo "✓ server/"
+          echo ""
+          echo "All structural checks passed!"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build Web Dashboard
+        run: |
+          npm --prefix web install
+          npm --prefix web run build
+
+      - name: Build Server Orchestrator
+        run: |
+          npm --prefix server install
+          npm --prefix server run build
