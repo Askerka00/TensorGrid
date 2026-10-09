@@ -32,10 +32,35 @@
 
 | Component | Description | Tech Stack |
 | :--- | :--- | :--- |
+| **Smart Contract** | On-chain Escrow PDA, Proof-of-Computation, 70/20/10 revenue split | Solana, Anchor, Rust |
 | **Web Dashboard** | Real-time orchestrator UI, node manager, and wallet binder | React 18, Vite, Tailwind CSS, Lucide |
 | **Orchestrator** | Node heartbeat management, task scheduling, and live state | Node.js, Express, WebSocket, TypeScript |
 | **Blockchain Engine** | Devnet escrow, wallet balances, and automated payout cycles | Solana Web3.js, SPL Token, @solana/web3.js |
 | **Node Agents** | Hardware auto-detection, idle polling, and instant kill-switch | PowerShell (Windows), Bash (macOS / Linux) |
+
+---
+
+## ⛓ Solana Smart Contract (Anchor Framework)
+
+The on-chain protocol logic is implemented in Rust using the **Anchor Framework** (`programs/tensorgrid-protocol`):
+
+### Core Instructions
+
+1. `initialize_protocol`: Sets up the protocol state with treasury wallet and 70/20/10 fee distribution (70% Provider / 20% Protocol / 10% Insurance).
+2. `register_node`: Allows compute providers (PC clubs, workstation owners) to register hardware specs, tier, and payout wallet.
+3. `create_task_escrow`: AI client deposits funds into an isolated TaskEscrow PDA before computation begins.
+4. `settle_task`: Verifies cryptographic Proof-of-Computation hash, distributes 70/20/10 rewards, and refunds unspent deposit.
+5. `cancel_task`: Refunds 100% of escrowed funds back to the client if the task times out or is cancelled.
+
+### Build & Test Contracts
+
+```bash
+# Build Anchor Solana program
+anchor build
+
+# Run TypeScript integration test suite
+anchor test
+```
 
 ---
 
